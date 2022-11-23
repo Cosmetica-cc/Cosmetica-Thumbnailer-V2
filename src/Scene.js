@@ -56,6 +56,40 @@ function getScene(subject, imageType, id, callback) {
         }).catch(e => {
             console.log(e);
         });
+    } else if (matches("player", "profile")) { // PLAYER OPENGRAPH
+        getUrl(`v2/get/info?user=${id}`).then(async data => {
+            delete data.panorama
+            const scene = await createScene({
+                "pose": PoseLoader.poses.standing,
+                "playerRotation": [0, 0.7, 0],
+                "camera": [10, 5, 30],
+                "cameraPostRotation": [0, 0, 0],
+                "fov": 30,
+                "lights": [
+                    {
+                        "type": "ambient",
+                        "intensity": 0.4,
+                        "position": [0, 0, 0]
+                    },
+                    {
+                        "type": "point",
+                        "intensity": 0.6,
+                        "position": "camera"
+                    }
+                ]
+            }, {
+                ...data,
+                backEquipment: "elytra"
+            });
+            scene.camera.position.y = 15;
+            callback({
+                image: await drawScene(scene.scene, scene.camera, 500, 500, "image/png", false, true, 3),
+                type: "png"
+            });
+            scene.dispose();
+        }).catch(e => {
+            console.log(e);
+        });
     } else if (imageType == "icon" && ["hat", "shoulderbuddy", "backbling"].includes(subject)) { // COSMETICS THUMBNAILS
         getUrl(`get/cosmetic?type=${subject}&id=${id}`).then(async data => {
             if (!data.model) return callback(false);
@@ -269,7 +303,7 @@ async function doCosmetic(data, subject, sceneInfo) {
     };
     if (subject == "hat") {
         playerData.hats = [data];
-        angle = Math.atan2(coords[0] - 8, 4 - coords[2]);
+        angle = Math.atan2(coords[0] - 8, 9 - coords[2]);
     } else if (subject == "shoulderbuddy") {
         playerData.shoulderBuddies = {
             left: data
